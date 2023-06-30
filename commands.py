@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 from halo import Halo
 from rich.console import Console
 from rich.markdown import Markdown
