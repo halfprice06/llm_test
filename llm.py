@@ -21,7 +21,7 @@ conversation_history = [
     {"role": "system", "content": "You are a friendly assistant who lives in the CLI."},
 ]
 
-def complete_conversation(user_question, conversation_mode):
+def complete_conversation(user_question, conversation_mode, search_bool=False):
     try:
         # Append the user question to the conversation history
         conversation_history.append({"role": "user", "content": user_question})
@@ -65,6 +65,16 @@ def complete_conversation(user_question, conversation_mode):
     except Exception as e:
         print(f"An error occurred: {str(e)}")
 
+    if search_bool==True:
+        
+        # make space for search results
+        console.print("\n\n\n\n===================================================================================================\n", style="#39FF14")
+
+        # print collected_messages with markdown
+        console.print(Markdown(collected_messages))
+
+        console.print("\n===================================================================================================", style="#39FF14")
+
 if args.mode is None:
     while True:
         mode = input("Please enter the mode you want to start in (simple or chat): ")
@@ -86,9 +96,10 @@ while True:
     if user_question.lower() == 'exit':
         break
     elif user_question.lower() == 'search':
+        search_bool = True        
         user_question = search()
         try:
-            complete_conversation(user_question, conversation_mode)
+            complete_conversation(user_question, conversation_mode, search_bool)
         except Exception as e:
             print(f"An error occurred: {str(e)}")
     else:
