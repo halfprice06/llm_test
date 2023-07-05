@@ -97,13 +97,14 @@ while True:
         break
     elif user_question.lower() == 'search':
         search_bool = True        
-        user_question = search()
+        google_query = input("Enter your search query:")
         try:
-            complete_conversation(user_question, conversation_mode, search_bool)
+            analyzed_google_results = search_main(google_query, user_question)
+            complete_conversation(user_question, conversation_mode, search_bool, analyzed_google_results)
         except Exception as e:
             print(f"An error occurred: {str(e)}")
     else:
         try:
-            complete_conversation(user_question, conversation_mode)
+            complete_conversation(user_question, conversation_mode, search_bool, analyzed_google_results="")
         except Exception as e:
             print(f"An error occurred: {str(e)}")
