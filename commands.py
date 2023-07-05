@@ -129,9 +129,6 @@ async def store_html_as_text(search_results):
             except Exception as exc:
                 print('%r generated an exception: %s' % (url, exc))
 
-    with open("Case_Summaries/html_as_text_results.json", "w") as file:
-        json.dump(google_json, file)
-
     return google_json
 
 def search_main(google_query, user_question):
