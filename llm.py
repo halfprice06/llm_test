@@ -3,7 +3,6 @@ import argparse
 import requests
 import time
 from commands import *
-from serpapi import GoogleSearch
 from rich.console import Console
 from rich.markdown import Markdown
 from halo import Halo
@@ -21,7 +20,7 @@ conversation_history = [
     {"role": "system", "content": "You are a friendly assistant who lives in the CLI."},
 ]
 
-def complete_conversation(user_question, conversation_mode, search_bool=False):
+def complete_conversation(user_question, conversation_mode, analyzed_google_results, snippets, search_bool=False):
     try:
         # Append the user question to the conversation history
         conversation_history.append({"role": "user", "content": user_question})
@@ -30,13 +29,13 @@ def complete_conversation(user_question, conversation_mode, search_bool=False):
             messages = conversation_history
         else:
             messages = [
-                {"role": "system", "content": "You are a friendly assistant who lives in the CLI."},
-                {"role": "user", "content": user_question}
+                {"role": "system", "content": "You are a friendly assistant who lives in the CLI. You may receive google search results and analysis from another LLM, analyze and incorporate the results to answer the user's question. Include any links in your response which were useful in answering the user's question. Always respond in well formatted Markdown."},
+                {"role": "user", "content": f"User's Question: {user_question} + \nAnalyzed Google Results: {analyzed_google_results} + \nGoogle Snippets: {snippets}"}
             ]
 
         # pass the conversation to the GPT model
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo-16k",
+            model="gpt-4",
             messages=messages,
             temperature=.5,
             stream=True
@@ -97,14 +96,15 @@ while True:
         break
     elif user_question.lower() == 'search':
         search_bool = True        
-        google_query = input("Enter your search query:")
+        google_query = input("Enter your search query: ")
         try:
-            analyzed_google_results = search_main(google_query, user_question)
-            complete_conversation(user_question, conversation_mode, search_bool, analyzed_google_results)
+            analyzed_google_results, snippets = search_main(google_query, user_question)
+            
+            complete_conversation(user_question, conversation_mode, analyzed_google_results, snippets, search_bool)
         except Exception as e:
             print(f"An error occurred: {str(e)}")
     else:
         try:
-            complete_conversation(user_question, conversation_mode, search_bool, analyzed_google_results="")
+            complete_conversation(user_question, conversation_mode, search_bool=False, snippets="", analyzed_google_results="")
         except Exception as e:
             print(f"An error occurred: {str(e)}")

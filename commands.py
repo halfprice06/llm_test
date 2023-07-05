@@ -5,8 +5,8 @@ import aiohttp
 import asyncio
 import pdfplumber
 import io
+from serpapi import GoogleSearch
 from bs4 import BeautifulSoup
-
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
@@ -71,6 +71,8 @@ def search_google(user_question):
         snippet = result.get('snippet', 'No snippet available')
         search_results_as_str += f"\nResult {i}:\nTitle: {title}\nURL: {url}\nSnippet: {snippet}\n"
 
+    snippets = search_results_as_str
+
     search_results = []
 
     if 'answer_box' in results:
@@ -79,7 +81,7 @@ def search_google(user_question):
     for result in results['organic_results']:
         search_results.append(result)
 
-    return search_results
+    return search_results, snippets
 
 async def fetch_url_async(session, url):
     try:
@@ -134,7 +136,7 @@ async def store_html_as_text(search_results):
 
 def search_main(google_query, user_question):
     # Perform the Google search
-    search_results = search_google(google_query) # search results = list of dictionaries
+    search_results, snippets = search_google(google_query) # search results = list of dictionaries
 
     # Create a new asyncio loop instance
     loop = asyncio.new_event_loop()
@@ -142,8 +144,8 @@ def search_main(google_query, user_question):
 
     google_json = loop.run_until_complete(store_html_as_text(search_results)) # google_json = dictionary of url: text
 
-    analyzed_google_results = analyze_google_json(user_question, google_json)
+    analyzed_google_results = analyze_google_json(user_question, snippets, google_json)
 
     analyzed_google_results += "\n\n Above is the analyzed search results from google which help anwswer the user's question."
 
-    return analyzed_google_results
+    return analyzed_google_results, snippets
