@@ -3,6 +3,7 @@ import argparse
 import requests
 import time
 from commands import *
+from email_command import send_email_report
 from rich.console import Console
 from rich.markdown import Markdown
 from halo import Halo
@@ -69,10 +70,12 @@ def complete_conversation(user_question, conversation_mode, analyzed_google_resu
         # make space for search results
         console.print("\n\n\n\n===================================================================================================\n", style="#39FF14")
 
-        # print collected_messages with markdown
+        # print collected_messages 
         console.print(Markdown(collected_messages))
 
         console.print("\n===================================================================================================", style="#39FF14")
+    
+    return collected_messages
 
 if args.mode is None:
     while True:
@@ -96,13 +99,25 @@ while True:
         break
     elif user_question.lower() == 'search':
         search_bool = True        
-        google_query = input("Enter your search query: ")
-        try:
-            analyzed_google_results, snippets = search_main(google_query, user_question)
-            
-            complete_conversation(user_question, conversation_mode, analyzed_google_results, snippets, search_bool)
-        except Exception as e:
-            print(f"An error occurred: {str(e)}")
+        while True:
+            google_query = input("Enter your search query: ")
+            try:
+                token_count_bool = search_main(google_query)
+                if token_count_bool == True:
+                    break
+                else:    
+                    analyzed_google_results, snippets = search_main(google_query)           
+                    collected_messages = complete_conversation(user_question, conversation_mode, analyzed_google_results, snippets, search_bool)
+                    # ask user if they want to email the results
+                    email_bool = input("Would you like to email the results? (y/n): ")
+                    if email_bool.lower() == 'y':
+                        user_email = input("Enter your email address: ")
+                        send_email_report(user_email, collected_messages)
+                        break
+                    else:
+                        break
+            except Exception as e:
+                print(f"An error occurred: {str(e)}")
     else:
         try:
             complete_conversation(user_question, conversation_mode, search_bool=False, snippets="", analyzed_google_results="")
